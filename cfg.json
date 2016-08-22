@@ -12,6 +12,7 @@
 		"dbOnly1File":true,
 		"dbLeaveTmpDir":true,
 		"dbPrintListOfZipFiles":true,
-		"dbSkipPushOfContent": true
+		"dbSkipPushOfContent": true,
+		"dbVerbose":true
 	}
 }

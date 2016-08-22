@@ -2,13 +2,10 @@ package index
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
-
-	"github.com/pschlump/godebug"
 )
 
 var ErrUnableToGetIndex = errors.New("Unable to get directory index")
@@ -33,19 +30,16 @@ func init() {
 // TODO: this could be significanly improved using a HTML parser - instead of ``greping'' the file names.
 // that is a 2-4 day project to get it working, however that will significantly improve the reliability of this.
 func ParseDirectory(data []byte) (fns []string, err error) {
-	// <tr><td><a href="1471622300928.zip">1471622300928.zip</a></td><td align="right">19-Aug-2016 19:02  </td><td align="right">9.9M</td><td>&nbsp;</td></tr>
+	// Example Line: <tr><td><a href="1471622300928.zip">1471622300928.zip</a></td><td align="right">19-Aug-2016 19:02  </td><td align="right">9.9M</td><td>&nbsp;</td></tr>
 	lines := strings.Split(string(data), "\n")
 	for _, line := range lines {
 		m := matchLine.FindAllStringSubmatch(line, -1)
 		if len(m) > 0 {
-			fmt.Printf("Matched %s\n", line)
 			if len(m[0]) > 1 {
-				fmt.Printf("Matched Fn=%s\n", m[0][1])
 				fns = append(fns, m[0][1])
 			}
 		}
 	}
-	fmt.Printf("fns =%s\n", godebug.SVarI(fns))
 	return
 }
 
