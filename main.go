@@ -21,9 +21,8 @@ import (
 	"github.com/pschlump/radix.v2/redis"
 
 	"www.2c-why.com/nuvi/news-aggregator/index"
+	"www.2c-why.com/nuvi/news-aggregator/unzip"
 )
-
-// "www.2c-why.com/nuvi/news-aggregator/unzip"
 
 // GlobalConfigType is for reading in the configuration for this program.
 // Example:
@@ -53,6 +52,7 @@ type GlobalConfigType struct {
 	LoadUrl                     string          `json:"LoadUrl"`                     //
 	TmpDir                      string          `json:"TmpDir"`                      //	Where to create temporary directories
 	TmpPrefix                   string          `json:"TmpPrefix"`                   // Prefix to create the temporary directories with
+	RedisKeyNewsXML             string          `json:"RedisKeyNewsXML"`             //
 }
 
 var gCfg = GlobalConfigType{
@@ -66,6 +66,7 @@ var gCfg = GlobalConfigType{
 	RedisKeyLoadedDocuments:     "loaded-documents",
 	TmpDir:                      "./tmp",
 	TmpPrefix:                   "na_",
+	RedisKeyNewsXML:             "NEWS_XML",
 }
 
 var Rerun = flag.String("rerun", "", "Rerun of a specific .zip file")                  //
@@ -161,17 +162,43 @@ func RunMainProcess(client *redis.Client) {
 	fmt.Printf("name=%s\n", name)
 
 	// download files form list -- may want to do this in parallel --
-	DownloadZipFiles(fList, name)
+	fpfnList := DownloadZipFiles(fList, name)
 
-	// skip, just use "name" - create temporary directory for each file to extract into - one temporary for each file - (if db2 then leave directory after run)
+	for ii, zip := range fpfnList {
+		// skip, just use "name" - create temporary directory for each file to extract into - one temporary for each file - (if db2 then leave directory after run)
+		zipname, err := ioutil.TempDir(name, fList[ii]) // don't much like this.
+		if err != nil {
+			// xyzzy log
+		} else {
 
-	// xyzzy - extract each .zip file - get list of file names. (if db3 then leave .zip file, else if no error then discard)
+			// extract each .zip file - get list of file names. (if dbLeaveTmpDir then leave .zip file, else if no error then discard)
+			zipList, err := unzip.UnZip(zip, zipname)
+			if err != nil {
+				// xyzzy log
+			}
 
-	// xyzzy - for each xml in .zip file
+			if IsDbOn("dbPrintListOfZipFiles", &gCfg) { // this is for testing - leave temporary directory in place
+				fmt.Printf("for %s in %s list of .zip files = %s\n", zip, zipname, zipList)
+			}
 
-	//		xyzzy - if it is not alredy loaded
+			// for each xml in .zip file -- use zipList
+			for _, xmlfn := range zipList {
+				//		if it is not already loaded
+				key := gCfg.RedisPrefix + gCfg.RedisKeyLoadedDocuments
+				// TODO: this has a race condition in it - if multiple processes are to be run then this test should be changed to set a key, and check the key in Redis.
+				if !IsInRedisSet(client, xmlfn, key) {
+					//		load into list in Redis - gCfg.RedisKeyNewsXML     : "NEWS_XML",
+					AddToRedisSet(client, xmlfn, key)
+					RedisLoadFile(client, gCfg.RedisKeyNewsXML, zipname+"/"+xmlfn)
+				}
+			}
 
-	//		xyzzy - load into list in redis
+			// cleanup temporary files
+			if !IsDbOn("dbLeaveTmpDir", &gCfg) { // this is for testing - leave temporary directory in place
+				os.RemoveAll(zipname)
+			}
+		}
+	}
 
 	// cleanup - remove temporary directories
 	if !IsDbOn("dbLeaveTmpDir", &gCfg) { // this is for testing - leave temporary directory in place
@@ -214,10 +241,13 @@ func RemoveDuplicateDownloadFiles(client *redis.Client, fList []string) (rv []st
 }
 
 // download files form list -- may want to do this in parallel --
-func DownloadZipFiles(fList []string, tmpDir string) {
+func DownloadZipFiles(fList []string, tmpDir string) (fullPathFn []string) {
 	for _, fn := range fList {
 
-		fp, err := sizlib.Fopen(tmpDir+"/"+fn, "w")
+		fpfn := tmpDir + "/" + fn
+		fullPathFn = append(fullPathFn, fpfn)
+
+		fp, err := sizlib.Fopen(fpfn, "w")
 		if err != nil {
 			// xyzzy
 		}
@@ -226,6 +256,7 @@ func DownloadZipFiles(fList []string, tmpDir string) {
 		URL := gCfg.LoadUrl + "/" + fn
 		HTTPGetToFile(URL, fp)
 	}
+	return
 }
 
 func HTTPGetToFile(URL string, fp *os.File) (status int) {
@@ -280,5 +311,24 @@ func AddToRedisSet(client *redis.Client, fn, key string) {
 	err := client.Cmd("SADD", key, fn).Err
 	if err != nil {
 		log.Printf("Error: Redis SADD, %s, %s returned error %s\n", key, fn, err)
+	}
+}
+
+func RedisLoadFile(client *redis.Client, listKey string, fn string) {
+
+	data, err := ioutil.ReadFile(fn)
+	if err != nil {
+		// xyzzy - log
+	}
+
+	if IsDbOn("dbSkipPushOfContent", &gCfg) { // this is for testing - leave temporary directory in place
+		fmt.Printf("Skipping Redis: LPUSH %s len(data=%d, fn=%s)\n", listKey, len(data), fn)
+		return
+	}
+
+	// This is assuming that you want to LPUSH and RPOP for processing.  So this adds to the "left" side of the list.
+	err = client.Cmd("LPUSH", listKey, string(data)).Err
+	if err != nil {
+		log.Printf("Error: Redis LPUSH, %s, %s returned error %s\n", listKey, fn, err)
 	}
 }

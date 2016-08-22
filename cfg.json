@@ -10,6 +10,8 @@
 	"RunMode": "test",
 	"DebugFlags": { 
 		"dbOnly1File":true,
-		"dbLeaveTmpDir":true
+		"dbLeaveTmpDir":true,
+		"dbPrintListOfZipFiles":true,
+		"dbSkipPushOfContent": true
 	}
 }
