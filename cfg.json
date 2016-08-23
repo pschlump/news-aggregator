@@ -7,7 +7,6 @@
 	"RedisPrefix": "na:",
 	"RedisKeySetOfFilesDownoaded": "downloaded-files",
 	"RedisKeyLoadedDocuments": "loaded-documents",
-	"RunMode": "test",
 	"DebugFlags": { 
 		"dbOnly1File":true,
 		"dbLeaveTmpDir":true,
