@@ -6,17 +6,9 @@ package main
 // github.com:   https://github.com/pschlump/news-aggregator.git
 //
 // TODO:
+//	0.  if !naLib.IsInRedisSet(client, xmlfn, key) {	// xyzzy2-have-seen
 //	1. 	A 2nd program that cleans up the old data ina RedisKeySetOfFilesDownloaded.   This would be simple
 //	  	since the file names are time stamps.   A cron job could do this.
-//	2. 	A cleanup program for RedisKeyLoadedDocuments - this could be implement in a number of ways.  First
-//		a TTL could be set on this key and the key could be rotated.  So the TTL is 3 days and after that
-//		time the old key just disappears.
-//	3.	There are 2 race conditions in this code relating to using Redis sets.  Both could be fixed in the
-//		same way.   Time estimate is 1 hour to fix these.   To fix create a key in Redis using SETNX for each
-//		item in the set when it is added to the set.  The before checking to see if the item is in the
-//		set check to see if the key already exists.  Fixing the race conditions would allow multiple copies
-//		of this program to run on multiple servers.  If one copy of the program is too slow then this would
-//		allow for parallel processing.  (Also switching to SETNX would eliminate TODO-1 and TODO-2 problems.)
 //
 
 import (
@@ -177,7 +169,7 @@ func RunMainProcess(client *redis.Client) {
 					//		if it is not already loaded
 					key := gCfg.RedisPrefix + gCfg.RedisKeyLoadedDocuments
 					// TODO: this has a race condition in it - if multiple processes are to be run then this test should be changed to set a key, and check the key in Redis.
-					if !naLib.IsInRedisSet(client, xmlfn, key) {
+					if !naLib.IsInRedisSet(client, xmlfn, key) { // xyzzy2-have-seen
 						//		load into list in Redis - gCfg.RedisKeyNewsXML     : "NEWS_XML",
 						naLib.AddToRedisSet(client, xmlfn, key)
 						naLib.RedisLoadFile(client, gCfg.RedisKeyNewsXML, zipname+"/"+xmlfn, &gCfg)

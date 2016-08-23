@@ -1,5 +1,8 @@
 package naLib
 
+// TODO:
+// 1. xyzzy1 - move this into HTTPGetToFile
+
 import (
 	"encoding/json"
 	"fmt"
@@ -86,6 +89,8 @@ func DownloadZipFiles(fList []string, tmpDir string, gCfg *GlobalConfigType) (fu
 
 		fpfn := tmpDir + "/" + fn
 		fullPathFn = append(fullPathFn, fpfn)
+
+		// xyzzy1 - move this into HTTPGetToFile
 
 		fp, err := sizlib.Fopen(fpfn, "w")
 		if err != nil {
