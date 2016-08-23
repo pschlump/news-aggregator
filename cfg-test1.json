@@ -1,0 +1,17 @@
+{
+	"RedisHost":  "192.168.0.133",
+	"RedisAuth":  "lLJSmkccYJiVEwskr1RM4MWIaBM",
+	"RunFreq": 0,
+	"LoadUrl": "http://feed.omgili.com/5Rh5AMTrc4Pv/mainstream/posts/",
+	"ServiceName": "news:aggrigator",
+	"RedisPrefix": "na:",
+	"RedisKeySetOfFilesDownoaded": "downloaded-files",
+	"RedisKeyLoadedDocuments": "loaded-documents",
+	"DebugFlags": { 
+		"dbOnly1File":true,
+		"dbLeaveTmpDir":true,
+		"dbPrintListOfZipFiles":true,
+		"dbSkipPushOfContent": true,
+		"dbVerbose":true
+	}
+}
