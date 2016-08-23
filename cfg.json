@@ -6,8 +6,5 @@
 	"ServiceName": "news:aggrigator",
 	"RedisPrefix": "na:",
 	"RedisKeySetOfFilesDownoaded": "downloaded-files",
-	"RedisKeyLoadedDocuments": "loaded-documents",
-	"DebugFlags": { 
-		"dbOnly1File":true
-	}
+	"RedisKeyLoadedDocuments": "loaded-documents"
 }
