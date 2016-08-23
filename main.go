@@ -18,11 +18,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/pschlump/news-aggregator/index"
+	"github.com/pschlump/news-aggregator/naLib"
+	"github.com/pschlump/news-aggregator/unzip"
 	"github.com/pschlump/radix.v2/redis"
-
-	"www.2c-why.com/nuvi/news-aggregator/index"
-	"www.2c-why.com/nuvi/news-aggregator/naLib"
-	"www.2c-why.com/nuvi/news-aggregator/unzip"
 )
 
 var gCfg = naLib.GlobalConfigType{

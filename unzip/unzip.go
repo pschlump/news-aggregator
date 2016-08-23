@@ -5,7 +5,7 @@ import (
 	"errors"
 	"io"
 
-	"github.com/pschlump/Go-FTL/server/sizlib"
+	"github.com/pschlump/news-aggregator/naLib"
 )
 
 var ErrEmptyArchive = errors.New("Empty Archive")
@@ -34,7 +34,7 @@ func UnZip(inputFn string, tmpDir string) (fileList []string, err error) {
 		// Extra block to grantee that "defer"-red close will happen every loop, not at exit of function.
 		{
 			defer rc.Close()
-			fo, err2 := sizlib.Fopen(fnContents, "w")
+			fo, err2 := naLib.Fopen(fnContents, "w")
 			if err2 != nil {
 				err = err2
 				return

@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"www.2c-why.com/nuvi/news-aggregator/naLib"
+	"github.com/pschlump/news-aggregator/naLib"
 )
 
 func Test_GetDirectory(t *testing.T) {
