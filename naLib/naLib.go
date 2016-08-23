@@ -5,6 +5,7 @@ package naLib
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,7 +13,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/pschlump/Go-FTL/server/sizlib"
 	"github.com/pschlump/radix.v2/redis"
 )
 
@@ -92,7 +92,7 @@ func DownloadZipFiles(fList []string, tmpDir string, gCfg *GlobalConfigType) (fu
 
 		// xyzzy1 - move this into HTTPGetToFile
 
-		fp, err := sizlib.Fopen(fpfn, "w")
+		fp, err := Fopen(fpfn, "w")
 		if err != nil {
 			log.Printf("Error: Unable to open file %s", fpfn)
 		} else {
@@ -155,6 +155,20 @@ func IsInRedisSet(client *redis.Client, item, key string) bool {
 	return false
 }
 
+// SetIfNotExists is a test and set operation with redis, true is returned if the key did NOT exists.
+func SetIfNotExists(client *redis.Client, item, key string) bool {
+	n, err := client.Cmd("SETNX", key, item).Int()
+	if err != nil {
+		log.Printf("Error: Redis SETNX, %s, %s returned error %s\n", key, item, err)
+		return false
+	}
+	// TODO: may want to use a TTL (time to live) for key so will automatically delete and clean up after X days
+	if n == 1 {
+		return true
+	}
+	return false
+}
+
 // AddToRedisSet will add the specified 'item' to the redis set 'key'.
 func AddToRedisSet(client *redis.Client, item, key string) {
 	err := client.Cmd("SADD", key, item).Err
@@ -182,4 +196,34 @@ func RedisLoadFile(client *redis.Client, listKey string, fn string, gCfg *Global
 	if err != nil {
 		log.Printf("Error: Redis LPUSH, %s, %s returned error %s\n", listKey, fn, err)
 	}
+}
+
+// InArray returns true when "lookFor" is found in "inArr".
+func InArray(lookFor string, inArr []string) bool {
+	for _, v := range inArr {
+		if lookFor == v {
+			return true
+		}
+	}
+	return false
+}
+
+var invalidMode = errors.New("Invalid Mode")
+
+// Fopen returns an open file or an error.  The "mode" prameter is like "C"/"C++" - with "r", "w", "a" for the modes.
+func Fopen(fn string, mode string) (file *os.File, err error) {
+	file = nil
+	if mode == "r" {
+		file, err = os.Open(fn) // For read access.
+	} else if mode == "w" {
+		file, err = os.OpenFile(fn, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	} else if mode == "a" {
+		file, err = os.OpenFile(fn, os.O_RDWR|os.O_APPEND, 0660)
+		if err != nil {
+			file, err = os.OpenFile(fn, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		}
+	} else {
+		err = invalidMode
+	}
+	return
 }

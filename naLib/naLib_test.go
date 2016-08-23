@@ -201,3 +201,11 @@ func Test_DownloadZipFiles(t *testing.T) {
 
 	os.RemoveAll("./testdata")
 }
+
+// func InArray(lookFor string, inArr []string) bool {
+func Test_InArray(t *testing.T) {
+}
+
+// func Fopen(fn string, mode string) (file *os.File, err error) {
+func Test_Fopen(t *testing.T) {
+}

@@ -6,8 +6,7 @@ package main
 // github.com:   https://github.com/pschlump/news-aggregator.git
 //
 // TODO:
-//	0.  if !naLib.IsInRedisSet(client, xmlfn, key) {	// xyzzy2-have-seen
-//	1. 	A 2nd program that cleans up the old data ina RedisKeySetOfFilesDownloaded.   This would be simple
+//	1. 	A 2nd program that cleans up the old data in RedisKeySetOfFilesDownloaded.   This would be simple
 //	  	since the file names are time stamps.   A cron job could do this.
 //
 
@@ -19,7 +18,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/pschlump/Go-FTL/server/sizlib"
 	"github.com/pschlump/radix.v2/redis"
 
 	"www.2c-why.com/nuvi/news-aggregator/index"
@@ -86,7 +84,7 @@ func main() {
 		}
 	} else {
 		if naLib.IsDbOn("dbVerbose", &gCfg) { // this is for testing - leave temporary directory in place
-			fmt.Printf("Running just onece\n")
+			fmt.Printf("Running just once\n")
 		}
 		RunMainProcess(client)
 	}
@@ -110,9 +108,9 @@ func RunMainProcess(client *redis.Client) {
 		return
 	}
 
-	// remove duplciates for download (if dbOnly1File, then only run 1 file) -- if Rerun - then search for that file
+	// remove duplicates for download (if dbOnly1File, then only run 1 file) -- if Rerun - then search for that file
 	if Rerun != nil && len(*Rerun) > 0 {
-		if sizlib.InArray(*Rerun, fList) {
+		if naLib.InArray(*Rerun, fList) {
 			fList = []string{*Rerun}
 		} else {
 			log.Printf("Unable to rerun %s - file is not available.", *Rerun)
@@ -167,11 +165,8 @@ func RunMainProcess(client *redis.Client) {
 				// for each xml in .zip file -- use zipList
 				for _, xmlfn := range zipList {
 					//		if it is not already loaded
-					key := gCfg.RedisPrefix + gCfg.RedisKeyLoadedDocuments
-					// TODO: this has a race condition in it - if multiple processes are to be run then this test should be changed to set a key, and check the key in Redis.
-					if !naLib.IsInRedisSet(client, xmlfn, key) { // xyzzy2-have-seen
-						//		load into list in Redis - gCfg.RedisKeyNewsXML     : "NEWS_XML",
-						naLib.AddToRedisSet(client, xmlfn, key)
+					key := gCfg.RedisPrefix + ":" + xmlfn
+					if naLib.SetIfNotExists(client, xmlfn, key) {
 						naLib.RedisLoadFile(client, gCfg.RedisKeyNewsXML, zipname+"/"+xmlfn, &gCfg)
 					}
 				}

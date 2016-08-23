@@ -8,10 +8,6 @@
 	"RedisKeySetOfFilesDownoaded": "downloaded-files",
 	"RedisKeyLoadedDocuments": "loaded-documents",
 	"DebugFlags": { 
-		"dbOnly1File":true,
-		"dbLeaveTmpDir":true,
-		"dbPrintListOfZipFiles":true,
-		"dbSkipPushOfContent": true,
-		"dbVerbose":true
+		"dbOnly1File":true
 	}
 }
