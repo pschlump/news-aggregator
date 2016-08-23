@@ -186,7 +186,7 @@ func Test_DownloadZipFiles(t *testing.T) {
 	ioutil.WriteFile("./testdata/test01.txt", []byte(ex), 0600)
 	go func() {
 		http.Handle("/", http.FileServer(http.Dir("./testdata")))
-		log.Println("Server started: http://localhost:19191")
+		// log.Println("Server started: http://localhost:19191")
 		log.Fatal(http.ListenAndServe(":19191", nil))
 	}()
 
@@ -204,8 +204,23 @@ func Test_DownloadZipFiles(t *testing.T) {
 
 // func InArray(lookFor string, inArr []string) bool {
 func Test_InArray(t *testing.T) {
+	if InArray("a", []string{"b", "c"}) {
+		t.Errorf("Test_InArray")
+	}
+	if !InArray("a", []string{"a", "c"}) {
+		t.Errorf("Test_InArray")
+	}
 }
 
 // func Fopen(fn string, mode string) (file *os.File, err error) {
 func Test_Fopen(t *testing.T) {
+	ex := `Some test Data`
+	os.Mkdir("./testdata", 0700)
+	ioutil.WriteFile("./testdata/test01.txt", []byte(ex), 0600)
+	fp, err := Fopen("./testdata/test01.txt", "r")
+	if err != nil {
+		t.Errorf("Test_Fopen")
+	}
+	fp.Close()
+	os.RemoveAll("./testdata")
 }
